@@ -1,0 +1,3 @@
+## 2024-05-27 - Performance Optimization Pattern: High-frequency UI updates
+**Learning:** High-frequency UI updates, such as mouse followers or real-time animations, can cause significant performance bottlenecks if they rely on React state. Every state update triggers a full reconciliation cycle. Bypassing React's reconciliation loop using `useRef` and direct DOM manipulation with `translate3d` (for hardware acceleration) drastically reduces CPU usage and improves frame rates.
+**Action:** Identify components with high-frequency updates and refactor them to use refs and direct DOM manipulation. Combine this with `React.memo` for expensive components that depend on parent state to prevent unnecessary re-renders during high-activity periods (like streaming AI responses).
