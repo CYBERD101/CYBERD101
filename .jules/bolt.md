@@ -1,0 +1,3 @@
+## 2026-06-01 - High-frequency UI updates performance
+**Learning:** React state updates on every mouse movement or typing character can cause significant lag in complex UIs. Using `useRef` and direct DOM manipulation with `translate3d` and `will-change-transform` bypasses React reconciliation and leverages hardware acceleration for smoother animations. Wrapping non-interactive visual components in `React.memo` further reduces the main thread workload during state updates.
+**Action:** Use `useRef` for high-frequency DOM updates and `React.memo` for static or infrequently updated visual components in React.
