@@ -1,0 +1,3 @@
+## 2024-10-24 - [UI Optimization with Memoization and Direct DOM Manipulation]
+**Learning:** High-frequency UI updates like mouse tracking should bypass React's state/render cycle. Using `useRef` and `translate3d` significantly reduces CPU usage and ensures 60fps performance by leveraging hardware acceleration.
+**Action:** Always prefer direct DOM manipulation for performance-critical, high-frequency UI elements like custom cursors or parallax effects. Use `React.memo` and `useMemo` to stabilize props and prevent unnecessary re-renders of expensive visual components (like the Matrix background) during state updates like chat streaming.
