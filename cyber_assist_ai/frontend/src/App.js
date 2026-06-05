@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Terminal, Send, ShieldAlert, Cpu, Ghost, Volume2, VolumeX, Activity, Lock, AlertTriangle } from 'lucide-react';
 
-const MatrixBackground = ({ color }) => {
+const MatrixBackground = React.memo(({ color }) => {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -40,14 +40,20 @@ const MatrixBackground = ({ color }) => {
   }, [color]);
 
   return <canvas ref={canvasRef} className="matrix-bg" />;
-};
+});
 
-const MouseFollower = ({ color }) => {
-  const [position, setPosition] = useState({ x: 0, y: 0 });
+const MouseFollower = React.memo(({ color }) => {
+  const followerRef = useRef(null);
+  const coords = useRef({ x: -100, y: -100 });
 
   useEffect(() => {
     const handleMouseMove = (e) => {
-      setPosition({ x: e.clientX, y: e.clientY });
+      coords.current = { x: e.clientX, y: e.clientY };
+      if (followerRef.current) {
+        // Bolt: Using translate3d and will-change: transform for 60fps performance.
+        // This bypasses React's reconciliation and state updates for high-frequency events.
+        followerRef.current.style.transform = `translate3d(${e.clientX - 16}px, ${e.clientY - 16}px, 0)`;
+      }
     };
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
@@ -55,18 +61,19 @@ const MouseFollower = ({ color }) => {
 
   return (
     <div
-      className="fixed pointer-events-none z-50 w-8 h-8 rounded-full border opacity-50 transition-transform duration-75"
+      ref={followerRef}
+      className="fixed pointer-events-none z-50 w-8 h-8 rounded-full border opacity-50 will-change-transform"
       style={{
-        left: position.x - 16,
-        top: position.y - 16,
         borderColor: color,
-        boxShadow: `0 0 10px ${color}`
+        boxShadow: `0 0 10px ${color}`,
+        // Bolt: Persist position across re-renders to prevent "jumps" when color changes.
+        transform: `translate3d(${coords.current.x - 16}px, ${coords.current.y - 16}px, 0)`
       }}
     />
   );
-};
+});
 
-const HackerAvatar = ({ status }) => {
+const HackerAvatar = React.memo(({ status }) => {
   const getStatusIcon = () => {
     switch(status) {
       case 'processing': return <Activity className="animate-spin" size={16} />;
@@ -109,7 +116,7 @@ const HackerAvatar = ({ status }) => {
       }`}>Cyber-Assist AI</p>
     </div>
   );
-};
+});
 
 function App() {
   const [messages, setMessages] = useState([
@@ -120,7 +127,11 @@ function App() {
   const [voiceEnabled, setVoiceEnabled] = useState(false);
   const scrollRef = useRef(null);
 
-  const themeColor = status === 'processing' ? '#f59e0b' : status === 'alert' ? '#ef4444' : '#00FF41';
+  // Bolt: Memoize themeColor to prevent unnecessary re-renders of memoized child components
+  // when 'status' hasn't changed.
+  const themeColor = React.useMemo(() =>
+    status === 'processing' ? '#f59e0b' : status === 'alert' ? '#ef4444' : '#00FF41',
+  [status]);
 
   useEffect(() => {
     if (scrollRef.current) {
