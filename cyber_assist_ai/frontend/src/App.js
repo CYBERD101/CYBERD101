@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Terminal, Send, ShieldAlert, Cpu, Ghost, Volume2, VolumeX, Activity, Lock, AlertTriangle } from 'lucide-react';
 
-const MatrixBackground = ({ color }) => {
+// React.memo prevents unnecessary re-renders when parent App re-renders (e.g. during typing)
+const MatrixBackground = React.memo(({ color }) => {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -40,14 +41,20 @@ const MatrixBackground = ({ color }) => {
   }, [color]);
 
   return <canvas ref={canvasRef} className="matrix-bg" />;
-};
+});
 
-const MouseFollower = ({ color }) => {
-  const [position, setPosition] = useState({ x: 0, y: 0 });
+// Performance Optimization: Use direct DOM manipulation for mouse tracking.
+// This avoids React state updates and re-renders on every mousemove event,
+// ensuring smooth 60fps performance and zero React reconciliation overhead.
+const MouseFollower = React.memo(({ color }) => {
+  const followerRef = useRef(null);
 
   useEffect(() => {
     const handleMouseMove = (e) => {
-      setPosition({ x: e.clientX, y: e.clientY });
+      if (followerRef.current) {
+        // use translate3d for hardware acceleration
+        followerRef.current.style.transform = `translate3d(${e.clientX - 16}px, ${e.clientY - 16}px, 0)`;
+      }
     };
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
@@ -55,18 +62,20 @@ const MouseFollower = ({ color }) => {
 
   return (
     <div
-      className="fixed pointer-events-none z-50 w-8 h-8 rounded-full border opacity-50 transition-transform duration-75"
+      ref={followerRef}
+      className="fixed pointer-events-none z-50 w-8 h-8 rounded-full border opacity-50 will-change-transform"
       style={{
-        left: position.x - 16,
-        top: position.y - 16,
+        left: 0,
+        top: 0,
         borderColor: color,
         boxShadow: `0 0 10px ${color}`
       }}
     />
   );
-};
+});
 
-const HackerAvatar = ({ status }) => {
+// React.memo ensures this component only re-renders when its 'status' prop changes
+const HackerAvatar = React.memo(({ status }) => {
   const getStatusIcon = () => {
     switch(status) {
       case 'processing': return <Activity className="animate-spin" size={16} />;
@@ -109,7 +118,7 @@ const HackerAvatar = ({ status }) => {
       }`}>Cyber-Assist AI</p>
     </div>
   );
-};
+});
 
 function App() {
   const [messages, setMessages] = useState([
@@ -120,7 +129,11 @@ function App() {
   const [voiceEnabled, setVoiceEnabled] = useState(false);
   const scrollRef = useRef(null);
 
-  const themeColor = status === 'processing' ? '#f59e0b' : status === 'alert' ? '#ef4444' : '#00FF41';
+  // Memoize themeColor to provide a stable primitive value to memoized children.
+  // This prevents children from re-rendering unless the 'status' actually changes.
+  const themeColor = useMemo(() =>
+    status === 'processing' ? '#f59e0b' : status === 'alert' ? '#ef4444' : '#00FF41',
+  [status]);
 
   useEffect(() => {
     if (scrollRef.current) {
