@@ -43,11 +43,18 @@ const MatrixBackground = ({ color }) => {
 };
 
 const MouseFollower = ({ color }) => {
-  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const followerRef = useRef(null);
+  const coords = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     const handleMouseMove = (e) => {
-      setPosition({ x: e.clientX, y: e.clientY });
+      coords.current = { x: e.clientX, y: e.clientY };
+      if (followerRef.current) {
+        // Bolt: Direct DOM manipulation bypasses React reconciliation for 60fps performance
+        // and prevents high-frequency re-renders of the App component.
+        // Using translate3d triggers hardware acceleration.
+        followerRef.current.style.transform = `translate3d(${coords.current.x - 16}px, ${coords.current.y - 16}px, 0)`;
+      }
     };
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
@@ -55,10 +62,11 @@ const MouseFollower = ({ color }) => {
 
   return (
     <div
-      className="fixed pointer-events-none z-50 w-8 h-8 rounded-full border opacity-50 transition-transform duration-75"
+      ref={followerRef}
+      className="fixed pointer-events-none z-50 w-8 h-8 rounded-full border opacity-50 transition-transform duration-75 will-change-transform"
       style={{
-        left: position.x - 16,
-        top: position.y - 16,
+        left: 0,
+        top: 0,
         borderColor: color,
         boxShadow: `0 0 10px ${color}`
       }}
