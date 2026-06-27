@@ -1,0 +1,3 @@
+## 2026-06-27 - Optimizing React Renders and Mouse Tracking
+**Learning:** High-frequency UI updates like mouse following can cause massive re-render storms if tied to React state. Moving these to `useRef` with direct DOM manipulation and `translate3d` significantly improves performance and responsiveness. Additionally, memoizing static background components prevents unnecessary re-renders during high-frequency state updates like AI message streaming.
+**Action:** Always prefer direct DOM manipulation for high-frequency events (mouse, scroll) and use `React.memo` for expensive or static components that sit alongside dynamic state.
