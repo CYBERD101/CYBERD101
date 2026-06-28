@@ -42,12 +42,22 @@ const MatrixBackground = ({ color }) => {
   return <canvas ref={canvasRef} className="matrix-bg" />;
 };
 
-const MouseFollower = ({ color }) => {
-  const [position, setPosition] = useState({ x: 0, y: 0 });
+/**
+ * Optimized MouseFollower component.
+ * Uses useRef and direct DOM manipulation with translate3d to bypass React's render cycle
+ * during high-frequency mouse movements, significantly reducing CPU usage and
+ * preventing unnecessary re-renders of the component tree.
+ * Wrapped in React.memo to prevent re-renders when the parent App state updates.
+ */
+const MouseFollower = React.memo(({ color }) => {
+  const followerRef = useRef(null);
 
   useEffect(() => {
     const handleMouseMove = (e) => {
-      setPosition({ x: e.clientX, y: e.clientY });
+      if (followerRef.current) {
+        // Use translate3d for hardware acceleration
+        followerRef.current.style.transform = `translate3d(${e.clientX - 16}px, ${e.clientY - 16}px, 0)`;
+      }
     };
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
@@ -55,16 +65,18 @@ const MouseFollower = ({ color }) => {
 
   return (
     <div
+      ref={followerRef}
       className="fixed pointer-events-none z-50 w-8 h-8 rounded-full border opacity-50 transition-transform duration-75"
       style={{
-        left: position.x - 16,
-        top: position.y - 16,
+        left: 0,
+        top: 0,
         borderColor: color,
-        boxShadow: `0 0 10px ${color}`
+        boxShadow: `0 0 10px ${color}`,
+        transform: 'translate3d(-100px, -100px, 0)'
       }}
     />
   );
-};
+});
 
 const HackerAvatar = ({ status }) => {
   const getStatusIcon = () => {
