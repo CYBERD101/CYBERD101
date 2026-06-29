@@ -1,0 +1,3 @@
+## 2025-05-14 - Optimized High-Frequency UI Updates
+**Learning:** In React, high-frequency events like 'mousemove' should bypass the standard state-to-props lifecycle to avoid expensive re-renders (reconciliation) that can drop frame rates below 60fps. Using `useRef` with direct DOM manipulation for properties like `transform: translate3d` provides significant performance gains by leveraging hardware acceleration and avoiding React's overhead.
+**Action:** Always prefer `useRef` and direct DOM manipulation for high-frequency UI updates like custom cursors, parallax effects, or animations that don't need to be part of the application's core state. Combine with `React.memo` to isolate these components from parent re-renders.
