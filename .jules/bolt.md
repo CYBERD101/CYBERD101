@@ -1,0 +1,3 @@
+## 2025-05-15 - [Direct DOM manipulation for high-frequency events]
+**Learning:** In React, high-frequency events like `mousemove` can cause massive performance bottlenecks if they trigger state updates, especially in complex UIs. Even with `React.memo`, if the parent component re-renders, the children might still be reconciled.
+**Action:** Use `useRef` and direct DOM manipulation with `translate3d` (for hardware acceleration) to handle events that fire many times per second. This bypasses the React reconciliation cycle and ensures 60fps performance without affecting other parts of the application. Combined with `React.memo` on the component itself, it reduces re-renders from O(N) to O(1) for standardized interactions.

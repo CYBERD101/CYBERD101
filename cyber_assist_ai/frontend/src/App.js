@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Terminal, Send, ShieldAlert, Cpu, Ghost, Volume2, VolumeX, Activity, Lock, AlertTriangle } from 'lucide-react';
 
-const MatrixBackground = ({ color }) => {
+/**
+ * MatrixBackground component renders a matrix rain effect on a canvas.
+ * Optimized with React.memo to prevent re-renders when parent App state updates (e.g. chat messages).
+ */
+const MatrixBackground = React.memo(({ color }) => {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -40,14 +44,26 @@ const MatrixBackground = ({ color }) => {
   }, [color]);
 
   return <canvas ref={canvasRef} className="matrix-bg" />;
-};
+});
 
-const MouseFollower = ({ color }) => {
-  const [position, setPosition] = useState({ x: 0, y: 0 });
+/**
+ * MouseFollower component renders a glowing ring that follows the mouse cursor.
+ *
+ * PERFORMANCE OPTIMIZATION:
+ * 1. Uses React.memo to prevent component re-renders when App state changes.
+ * 2. Uses direct DOM manipulation via useRef and translate3d for mouse tracking.
+ *    This avoids triggering the React reconciliation cycle on every mouse movement (up to 120-240Hz),
+ *    keeping the UI responsive and freeing up the main thread for other tasks.
+ */
+const MouseFollower = React.memo(({ color }) => {
+  const followerRef = useRef(null);
 
   useEffect(() => {
     const handleMouseMove = (e) => {
-      setPosition({ x: e.clientX, y: e.clientY });
+      if (followerRef.current) {
+        // Direct DOM manipulation for maximum performance during high-frequency events.
+        followerRef.current.style.transform = `translate3d(${e.clientX - 16}px, ${e.clientY - 16}px, 0)`;
+      }
     };
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
@@ -55,18 +71,24 @@ const MouseFollower = ({ color }) => {
 
   return (
     <div
+      ref={followerRef}
       className="fixed pointer-events-none z-50 w-8 h-8 rounded-full border opacity-50 transition-transform duration-75"
       style={{
-        left: position.x - 16,
-        top: position.y - 16,
+        left: 0,
+        top: 0,
         borderColor: color,
-        boxShadow: `0 0 10px ${color}`
+        boxShadow: `0 0 10px ${color}`,
+        willChange: 'transform'
       }}
     />
   );
-};
+});
 
-const HackerAvatar = ({ status }) => {
+/**
+ * HackerAvatar component displays the AI's status and avatar.
+ * Optimized with React.memo to prevent unnecessary re-renders.
+ */
+const HackerAvatar = React.memo(({ status }) => {
   const getStatusIcon = () => {
     switch(status) {
       case 'processing': return <Activity className="animate-spin" size={16} />;
@@ -109,7 +131,7 @@ const HackerAvatar = ({ status }) => {
       }`}>Cyber-Assist AI</p>
     </div>
   );
-};
+});
 
 function App() {
   const [messages, setMessages] = useState([
